@@ -2,177 +2,26 @@ import json
 import requests
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
-
-apl_completions = {
-    "<-": "←",
-    "xx": "×",
-    ":-": "÷",
-    "*O": "⍟",
-    "OO": "○",
-    "|_": "⊥",
-    "TT": "⊤",
-    "-|": "⊣",
-    "|-": "⊢",
-    "=/": "≠",
-    "<_": "≤",
-    ">_": "≥",
-    "==": "≡",
-    "_=": "≡",
-    "vv": "∨",
-    "^^": "∧",
-    "^~": "⍲",
-    "v~": "⍱",
-    "^|": "↑",
-    "v|": "↓",
-    "cc": "⊂",
-    "))": "⊃",
-    "c_": "⊆",
-    "A|": "⍋",
-    "V|": "⍒",
-    "ii": "⍳",
-    "i_": "⍸",
-    "ee": "∊",
-    "e_": "⍷",
-    "uu": "∪",
-    "nn": "∩",
-    "/-": "⌿",
-    "\\-": "⍀",
-    ",-": "⍪",
-    "O-": "⊖",
-    "O\\": "⍉",
-    "~:": "⍨",
-    "*:": "⍣",
-    "oo": "∘",
-    "o:": "⍤",
-    "O:": "⍥",
-    "[]": "⎕",
-    "o_": "⍎",
-    "o-": "⍕",
-    "To": "⍕",
-    "<>": "⋄",
-    "on": "⍝",
-    "ww": "⍵",
-    "aa": "⍺",
-    "VV": "∇",
-    "--": "¯",
-    "0~": "⍬",
-    "[-": "⌹",
-    "-": "⌹",
-    "[|": "⌷",
-    "|]": "⌷",
-    "7=": "≢",
-    "Z-": "≢",
-    "77": "⌈",
-    "FF": "⌈",
-    "ll": "⌊",
-    "LL": "⌊",
-    "::": "¨",
-    "\"\"": "¨",
-    "rr": "⍴",
-    "pp": "⍴",
-    "[:": "⍠",
-    ":]": "⍠",
-    "[=": "⌸",
-    "=]": "⌸",
-    "[<": "⌺",
-    ">]": "⌺",
-    "T_": "⌶",
-    "II": "⌶",
-}
-apl_descriptions = {
-    "<-": "Assignment",
-    "xx": "Direction | Times",
-    ":-": "Reciprocal | Divide",
-    "*O": "Natural logarithm | Logarithm",
-    "OO": "Pi Times | Circular",
-    "|_": "Decode (Dyadic)",
-    "TT": "Encode (Dyadic)",
-    "-|": "Same | Left",
-    "|-": "Same | Right",
-    "=/": "Unique Mask | Not equal",
-    "<_": "Less than or equal to (Dyadic)",
-    ">_": "Greater than or equal to (Dyadic)",
-    "==": "Depth | Match",
-    "_=": "Depth | Match",
-    "vv": "Or (Dyadic)",
-    "^^": "And (Dyadic)",
-    "^~": "Nan (Dyadic)",
-    "v~": "Nor (Dyadic)",
-    "^|": "Mix | Take",
-    "v|": "Split | Drop",
-    "cc": "Enclose | Partitioned enclose",
-    "))": "First | Pick",
-    "c_": "Nest | Partition",
-    "A|": "Grade up | Grade up",
-    "V|": "Grade down | Grade down",
-    "ii": "Indices | Indices of",
-    "i_": "Where | Interval index",
-    "ee": "Enlist | Member of",
-    "e_": "Find (Dyadic)",
-    "uu": "Unique | Union",
-    "nn": "Intersection (Dyadic)",
-    "/-": "Replicate First | Reduce First",
-    "\\-": "Expand First | Scan First",
-    ",-": "Table | Catenate First",
-    "O-": "Reverse First | Rotate First",
-    "O\\": "Transpose | Reorder Axes",
-    "~:": "Constant/Commute | Self/Swap",
-    "*:": "Repeat (Dyadic)",
-    "oo": "Curry/Compose | Beside/Bind",
-    "o:": "Rank/Atop (Dyadic)",
-    "O:": "Over (Dyadic)",
-    "[]": "SYSTEM",
-    "o_": "Execute",
-    "o-": "Format",
-    "To": "Format",
-    "<>": "Statement separator",
-    "on": "Comment",
-    "ww": "Right argument | Right operand",
-    "aa": "Left argument | Left operand",
-    "VV": "Recursion | Recursion",
-    "--": "Negative",
-    "0~": "Empty numeric vector",
-    "[-": "Matrix inverse | Matrix divide",
-    "-]": "Matrix inverse | Matrix divide",
-    "[|": "Index",
-    "|]": "Index",
-    "7=": "Tally | Not match",
-    "Z-": "Tally | Not match",
-    "77": "Ceiling | Maximum",
-    "FF": "Ceiling | Maximum",
-    "ll": "Floor | Minimum",
-    "LL": "Floor | Minimum",
-    "::": "Each",
-    "\"\"": "Each",
-    "rr": "Shape | Reshape",
-    "pp": "Shape | Reshape",
-    "[:": "Variant",
-    ":]": "Variant",
-    "[=": "Index key | Key",
-    "=]": "Index key | Key",
-    "[<": "Stencil",
-    ">]": "Stencil",
-    "T_": "I-beam",
-    "II": "I-beam",
-}
+from apl_completions import apl_completions
+from apl_descriptions import apl_descriptions
 
 
 class APLCompleter(Completer):
     def get_completions(self, document, complete_event):
-        last_two_chars = document.text_before_cursor[-2:]
-        if last_two_chars == '':
+        last_two_chars = document.text_before_cursor[-2:].strip(' ')
+        if len(last_two_chars) != 2:
             return
         if last_two_chars in apl_completions:
-            description = apl_descriptions[last_two_chars]
-            yield Completion(apl_completions[last_two_chars], start_position=-2,
-                             display_meta=description, style='bg:ansiblue')
+            description = apl_descriptions[str(last_two_chars)]
+            yield Completion(apl_completions[str(last_two_chars)], start_position=-2,
+                             display_meta=description, style='bg:lightblue')
 
         elif any(k.startswith(document.text_before_cursor[-1:]) for k in apl_completions):
             for seq, symbol in apl_completions.items():
                 if seq.startswith(document.text_before_cursor[-1:]):
                     description = apl_descriptions[seq]
                     yield Completion(symbol, start_position=-1,
-                                     display_meta=description, style='bg:ansiblue')
+                                     display_meta=description, style='bg:lightblue')
 
 
 class APLExecutor:
@@ -209,7 +58,6 @@ class APLExecutor:
         self.state = ''
         self.size = 0
         self.hash = ''
-
     def cli(self):
         session = PromptSession(completer=APLCompleter())
         print("APL CLI - type 'exit' to quit")
@@ -221,21 +69,42 @@ class APLExecutor:
                 if text.strip() == '⎕CLEAR':
                     self.clear()
                     continue
-                # If the text uses ⎕NGET'filepath', replace it with the actual file contents. The contents should be an escaped string.
-                if '⎕NGET' in text:
-                    start = text.find('⎕NGET') + 6
+                if '⎕NREAD' in text:
+                    start = text.find('⎕NREAD') + 7
                     end = text.find("'", start)
                     filepath = text[start:end]
                     with open(filepath, 'r') as f:
                         contents = f.read()
                         # Turn the string into unicode code points, separated by spaces
                         contents = ' '.join(map(str, map(ord, contents)))
-                    text = f"{text[:(start-6)]}⎕UCS {contents}{text[(end+1):]}"
-                # Automatically replace ASCII sequences with corresponding APL symbols
-                for i in range(len(text) - 1):
-                    ascii_seq = text[i:i + 2]
-                    if ascii_seq in apl_completions:
-                        text = text[:i] + apl_completions[ascii_seq] + text[i + 2:]
+                    text = f"{text[:(start - 7)]}⎕UCS {contents}{text[(end + 1):]}"
+                if '⎕NPUT' in text:
+                    start = text.find('⎕NPUT') + 6
+                    contents = text[:(start - 7)]
+                    if contents in self._exec_stateful(')VARS')[3][0]:
+                        contents = self._exec_stateful(f'{contents}')[3]
+                        if len(contents) > 1:
+                            contents = '\n'.join(contents)
+                        else:
+                            contents = contents[0]
+                    end = text.find("'", start)
+                    filepath = text[start:end]
+                    flags = 0
+                    if len(text) >= end + 2:
+                        flags = int(text[end + 2])
+                    if flags == 0:
+                        with open(filepath, 'x') as f:
+                            f.write(contents)
+                    elif flags == 1:
+                        with open(filepath, 'w') as f:
+                            f.write(contents)
+                    elif flags == 2:
+                        with open(filepath, 'a') as f:
+                            f.write(contents)
+                    else:
+                        raise Exception(f"Invalid flag: {flags}")
+                    text = f"{len(contents)}"
+
                 response = self._exec_stateful(text)
                 if response[3]:
                     if len(response[3]) > 1:
