@@ -1,6 +1,9 @@
+import re
 from apl_completions import apl_completions
 from apl_descriptions import apl_descriptions
 from prompt_toolkit.completion import Completer, Completion
+
+
 class APLCompleter(Completer):
     def __init__(self, user_defs):
         self.user_defs = user_defs
@@ -20,16 +23,17 @@ class APLCompleter(Completer):
                     description = apl_descriptions[seq]
                     yield Completion(symbol, start_position=-1,
                                      display_meta=description, style='bg:lightblue')
-        # Check for user-defined functions and variables
         text = document.text_before_cursor.strip()
-        alnumchain = list(map(str.isalnum, reversed(text)))
-        alnumtext = text[-len(alnumchain):]
-        if len(alnumtext) >= 3:
-            for name, info in self.user_defs['functions'].items():
-                if name.startswith(alnumtext):
-                    yield Completion(name, start_position=-len(alnumtext), display_meta=info['comment'],
-                                     style='bg:ansibrightyellow')
-            for name, info in self.user_defs['variables'].items():
-                if name.startswith(alnumtext):
-                    yield Completion(name, start_position=-len(alnumtext), display_meta=info['comment'],
-                                     style='bg:ansibrightmagenta')
+        # Regex because it was 100x faster than a while loop lol
+        match = re.search(r"[a-zA-Z0-9]+$", text)
+        if match is None:
+            return
+        alnumtext = match.group()
+        for name, info in self.user_defs['functions'].items():
+            if name.startswith(alnumtext):
+                yield Completion(name, start_position=-len(alnumtext), display_meta=info['comment'],
+                                 style='bg:ansibrightyellow')
+        for name, info in self.user_defs['variables'].items():
+            if name.startswith(alnumtext):
+                yield Completion(name, start_position=-len(alnumtext), display_meta=info['comment'],
+                                 style='bg:ansibrightmagenta')

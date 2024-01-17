@@ -1,5 +1,5 @@
 # aplpyn
-Welcome to aplpyn (pronounced "apple pen"), a Python library for APL.
+Welcome to aplpyn (pronounced "apple pen"), a Python CLI for APL.
 
 ## Features
 
@@ -7,21 +7,20 @@ Welcome to aplpyn (pronounced "apple pen"), a Python library for APL.
 * APL ASCII completion
 * APL autocomplete
 * Making APL functions python objects
-* File I (no O lol) support
+* File I/O support
 * Stateful and Stateless APL sessions
 * No APL interpreter required
 
 
 ## TODO:
 
-* Add better File IO support
-* Add importing/exporting of APL functions, variables, namespaces, and operators
-* Add support for accessing python from APL
-* Add library to PyPi
+- [X] Add basic File IO support
+- [X] Add importing/exporting of APL functions, variables, namespaces, and operators
+- [ ] Add support for accessing python from APL
 
 
 ## What this is NOT meant for
 
 * High performance APL
 * Large files
-* 
+* Resource Intensive Calculations

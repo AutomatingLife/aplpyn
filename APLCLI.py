@@ -2,6 +2,7 @@ import json
 from prompt_toolkit import PromptSession
 from APLCompleter import APLCompleter
 
+
 class APLCLI:
     def __init__(self, executor):
         self.executor = executor
@@ -19,7 +20,7 @@ class APLCLI:
                     self.executor.clear()
                     continue
                 if '←' in text:
-                    self.executor._store_definition(text)
+                    self.executor.store_definition(text)
                 if '⎕EXPORT' in text:
                     start = text.find('⎕EXPORT') + 8
                     filepath = 'namespace.json'
@@ -62,8 +63,8 @@ class APLCLI:
                 if '⎕NPUT' in text:
                     start = text.find('⎕NPUT') + 6
                     contents = text[:(start - 7)]
-                    if contents in self.executor._exec_stateful(')VARS')[3][0]:
-                        contents = self.executor._exec_stateful(f'{contents}')[3]
+                    if contents in self.executor.exec_stateful(')VARS')[3][0]:
+                        contents = self.executor.exec_stateful(f'{contents}')[3]
                         if len(contents) > 1:
                             contents = '\n'.join(contents)
                         else:
@@ -86,7 +87,7 @@ class APLCLI:
                         raise Exception(f"Invalid flag: {flags}")
                     text = f"{len(contents)}"
 
-                response = self.executor._exec_stateful(text)
+                response = self.executor.exec_stateful(text)
                 if response[3]:
                     if len(response[3]) > 1:
                         for element in response[3]:
