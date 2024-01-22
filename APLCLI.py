@@ -1,6 +1,10 @@
 import json
 from prompt_toolkit import PromptSession
 from APLCompleter import APLCompleter
+from prompt_toolkit.styles import style_from_pygments_cls
+from prompt_toolkit.lexers import PygmentsLexer
+from pygments.styles import get_style_by_name
+from pygments.lexers import APLLexer
 
 
 class APLCLI:
@@ -8,19 +12,29 @@ class APLCLI:
         self.executor = executor
 
     def run(self):
+        codestyle = get_style_by_name('monokai')
+        codestyle = style_from_pygments_cls(codestyle)
         completer = APLCompleter(self.executor.user_defs)
-        session = PromptSession(completer=completer)
+        session = PromptSession(completer=completer, lexer=PygmentsLexer(APLLexer), style=codestyle)
         print("APL CLI - type 'exit' to quit")
         while True:
             try:
                 text = session.prompt('APL> ')
                 if text.strip() == '⎕EXIT':
                     break
-                if text.strip() == '⎕CLEAR':
+                if text.strip() == '⎕CLEAR' or text.strip() == ')CLEAR':
                     self.executor.clear()
-                    continue
-                if '←' in text:
-                    self.executor.store_definition(text)
+                    self.executor.user_defs['functions'] = {}
+                    self.executor.user_defs['variables'] = {}
+                elif text.strip().startswith(')ERASE') or text.strip().startswith('⎕ERASE'):
+                    start = text.find(')ERASE') + 7
+                    end = len(text)
+                    names = text[start:end].split()
+                    for name in names:
+                        if name in self.executor.user_defs['functions']:
+                            del self.executor.user_defs['functions'][name]
+                        if name in self.executor.user_defs['variables']:
+                            del self.executor.user_defs['variables'][name]
                 if '⎕EXPORT' in text:
                     start = text.find('⎕EXPORT') + 8
                     filepath = 'namespace.json'
@@ -35,7 +49,7 @@ class APLCLI:
                     print(
                         f"{len(self.executor.user_defs['functions'])} functions {self.executor.user_defs['functions'].keys()} and {len(self.executor.user_defs['variables'])} variables {self.executor.user_defs['variables'].keys()} exported to {filepath}")
                     continue
-                if '⎕IMPORT' in text:
+                elif '⎕IMPORT' in text:
                     start = text.find('⎕IMPORT') + 8
                     filepath = 'namespace.json'
                     if "'" in text[start:]:
@@ -60,7 +74,7 @@ class APLCLI:
                         # Turn the string into unicode code points, separated by spaces
                         contents = ' '.join(map(str, map(ord, contents)))
                     text = f"{text[:(start - 7)]}⎕UCS {contents}{text[(end + 1):]}"
-                if '⎕NPUT' in text:
+                elif '⎕NPUT' in text:
                     start = text.find('⎕NPUT') + 6
                     contents = text[:(start - 7)]
                     if contents in self.executor.exec_stateful(')VARS')[3][0]:
@@ -86,6 +100,8 @@ class APLCLI:
                     else:
                         raise Exception(f"Invalid flag: {flags}")
                     text = f"{len(contents)}"
+                if '←' in text:
+                    self.executor.store_definition(text)
 
                 response = self.executor.exec_stateful(text)
                 if response[3]:
