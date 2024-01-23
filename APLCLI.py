@@ -12,10 +12,10 @@ class APLCLI:
         self.executor = executor
 
     def run(self):
-        codestyle = get_style_by_name('monokai')
-        codestyle = style_from_pygments_cls(codestyle)
+        style = get_style_by_name('monokai')
+        style = style_from_pygments_cls(style)
         completer = APLCompleter(self.executor.user_defs)
-        session = PromptSession(completer=completer, lexer=PygmentsLexer(APLLexer), style=codestyle)
+        session = PromptSession(completer=completer, lexer=PygmentsLexer(APLLexer), style=style)
         print("APL CLI - type 'exit' to quit")
         while True:
             try:
@@ -24,9 +24,15 @@ class APLCLI:
                     break
                 if text.strip() == '⎕CLEAR' or text.strip() == ')CLEAR':
                     self.executor.clear()
-                    self.executor.user_defs['functions'] = {}
-                    self.executor.user_defs['variables'] = {}
+                    self.executor.user_defs['functions'].clear()
+                    self.executor.user_defs['variables'].clear()
+                    # Do the equivalent of Ctrl L in the terminal
+                    print('\033c')
+                    continue
                 elif text.strip().startswith(')ERASE') or text.strip().startswith('⎕ERASE'):
+                    # if the user typed ⎕ERASE change it to )ERASE
+                    if text.strip().startswith('⎕ERASE'):
+                        text = text.replace('⎕ERASE', ')ERASE')
                     start = text.find(')ERASE') + 7
                     end = len(text)
                     names = text[start:end].split()

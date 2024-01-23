@@ -37,7 +37,8 @@ class APLExecutor:
         self.state = ''
         self.size = 0
         self.hash = ''
-        self.user_defs = {'functions': {}, 'variables': {}}
+        self.user_defs['functions'].clear()
+        self.user_defs['variables'].clear()
 
     def store_definition(self, code):
         try:
